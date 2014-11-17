@@ -47,7 +47,7 @@ max_en_savings <- 0.7
 
 
 
-range_en_savings<-seq(0, 0.7, by=0.01);
+range_en_savings<-seq(0, 0.7, by=0.01)
 range_costs<-vector(length=length(range_en_savings))
 range_availability<-vector(length=length(range_en_savings))
 
