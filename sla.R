@@ -25,12 +25,23 @@ for(location in locations) {
 # cloud management aspects
 #
 
-# TODO choose an en_savings rate
-# between 0 and max_en_savings
-en_savings <- 0.2
+costs <- function(en_saving){
+	vm_cost <- (1 - en_saving) * vm_baseprice
+	
+	return(vm_cost)
+}
 
-vm_cost <- (1 - en_savings) * vm_baseprice
-overhead_ratio <- min(sd_dc)/max(sd_dc)
-availability <- 1 - en_savings * overhead_ratio
+availability <- function(en_saving){
+	overhead_ratio <- min(sd_dc)/max(sd_dc)
+	availability <- 1 - en_saving * overhead_ratio
 
-print(availability)
+	return(availability)
+}
+
+# TODO
+max_en_savings <- 1
+
+for (i in 0:(max_en_savings*100)){
+
+	cat("en_saving of ", i/100, " results in av. ", availability(i/100), "and costs ", costs(i/100), "\n")
+}
