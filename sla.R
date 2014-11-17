@@ -41,6 +41,21 @@ availability <- function(en_saving){
 # parameter of group 4
 max_en_savings <- 0.7
 
-for (i in 0:(max_en_savings*100)){
-	cat("en_saving of ", i/100, " results in av. ", availability(i/100), "and costs ", costs(i/100), "\n")
+
+
+rage_i<-seq(0, 0.7, by=0.01);
+rage_costs<-vector(length=length(rage_i))
+rage_avl<-vector(length=length(rage_i))
+
+for (i in rage_i){
+	rage_costs[i*100-1] <- costs(i)
+	rage_avl[i*100-1] <- availability(i)
+
+	cat(i, " ", rage_costs[i*100-1], " ~", rage_avl[i*100-1], "\n")
 }
+
+library(rgl)
+
+plot3d(rage_i, rage_costs, rage_avl, col="red", size=3)
+
+Sys.sleep(10)
