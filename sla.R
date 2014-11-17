@@ -1,6 +1,6 @@
 
-locations <- c("BE.St..Ghislain", "IE.Dublin", "SG.Singapore",
-               "TW.Changhua.County", "IN.Indianapolis", "MI.Detroit")
+locations <- c("IE.Dublin", "SG.Singapore",
+               "TW.Changhua.County", "IN.Indianapolis")
 
 # price/hour (USD) for a c3.large instance, see http://aws.amazon.com/ec2/pricing/
 vm_baseprice <- 0.105
