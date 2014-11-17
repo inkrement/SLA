@@ -12,11 +12,15 @@ temperatures <- read.csv("temperatures.csv", header=TRUE)[1:(dim(prices)[1]), ]
 sd_dc <- vector(length=length(locations))
 names(sd_dc) <- locations
 
+cop_t <- function(temperature){
+	return(1.2 + 0.128*((temperature+9)^0.5))
+}
+
 for(location in locations) {
     el_price = prices[, location]
     temp = temperatures[, location]
 
-    cop <- 1.2 + 0.128*((temp+9)^0.5)
+    cop <- ifelse(temp<-9, cop_t(temp), cop_t(-9))
     adjusted_cost <- cop*el_price
     sd_dc[location] <- sd(adjusted_cost, na.rm=TRUE)
 }
@@ -48,10 +52,10 @@ rage_costs<-vector(length=length(rage_i))
 rage_avl<-vector(length=length(rage_i))
 
 for (i in rage_i){
-	rage_costs[i*100-1] <- costs(i)
-	rage_avl[i*100-1] <- availability(i)
+	rage_costs[i*100] <- costs(i)
+	rage_avl[i*100] <- availability(i)
 
-	cat(i, " ", rage_costs[i*100-1], " ~", rage_avl[i*100-1], "\n")
+	cat(i, " ", rage_costs[i*100], " ~", rage_avl[i*100-1], "\n")
 }
 
 library(rgl)
