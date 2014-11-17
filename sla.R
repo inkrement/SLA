@@ -38,10 +38,9 @@ availability <- function(en_saving){
 	return(availability)
 }
 
-# TODO
-max_en_savings <- 1
+# parameter of group 4
+max_en_savings <- 0.7
 
 for (i in 0:(max_en_savings*100)){
-
 	cat("en_saving of ", i/100, " results in av. ", availability(i/100), "and costs ", costs(i/100), "\n")
 }
