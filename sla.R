@@ -20,3 +20,17 @@ for(location in locations) {
     adjusted_cost <- cop*el_price
     sd_dc[location] <- sd(adjusted_cost, na.rm=TRUE)
 }
+
+#
+# cloud management aspects
+#
+
+# TODO choose an en_savings rate
+# between 0 and max_en_savings
+en_savings <- 0.2
+
+vm_cost <- (1 - en_savings) * vm_baseprice
+overhead_ratio <- min(sd_dc)/max(sd_dc)
+availability <- 1 - en_savings * overhead_ratio
+
+print(availability)
