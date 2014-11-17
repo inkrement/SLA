@@ -47,19 +47,13 @@ max_en_savings <- 0.7
 
 
 
-rage_i<-seq(0, 0.7, by=0.01);
-rage_costs<-vector(length=length(rage_i))
-rage_avl<-vector(length=length(rage_i))
+range_en_savings<-seq(0, 0.7, by=0.01);
+range_costs<-vector(length=length(range_en_savings))
+range_avl<-vector(length=length(range_en_savings))
 
-for (i in rage_i){
-	rage_costs[i*100] <- costs(i)
-	rage_avl[i*100] <- availability(i)
+for (i in range_en_savings){
+	range_costs[i*100] <- costs(i)
+	range_avl[i*100] <- availability(i)
 
-	cat(i, " ", rage_costs[i*100], " ~", rage_avl[i*100-1], "\n")
+	cat(i, " ", range_costs[i*100], " ~", range_avl[i*100], "\n")
 }
-
-library(rgl)
-
-plot3d(rage_i, rage_costs, rage_avl, col="red", size=3)
-
-Sys.sleep(10)
