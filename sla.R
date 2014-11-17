@@ -19,8 +19,7 @@ cop_t <- function(temperature){
 for(location in locations) {
     el_price = prices[, location]
     temp = temperatures[, location]
-
-    cop <- ifelse(temp<-9, cop_t(temp), cop_t(-9))
+    cop <- ifelse(temp<-9, cop_t(-9), cop_t(temp))
     adjusted_cost <- cop*el_price
     sd_dc[location] <- sd(adjusted_cost, na.rm=TRUE)
 }
