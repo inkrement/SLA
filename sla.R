@@ -49,11 +49,11 @@ max_en_savings <- 0.7
 
 range_en_savings<-seq(0, 0.7, by=0.01);
 range_costs<-vector(length=length(range_en_savings))
-range_avl<-vector(length=length(range_en_savings))
+range_availability<-vector(length=length(range_en_savings))
 
 for (i in range_en_savings){
 	range_costs[i*100] <- costs(i)
-	range_avl[i*100] <- availability(i)
+	range_availability[i*100] <- availability(i)
 
-	cat(i, " ", range_costs[i*100], " ~", range_avl[i*100], "\n")
+	cat(i, " ", range_costs[i*100], " ~", range_availability[i*100], "\n")
 }
