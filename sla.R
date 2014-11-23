@@ -52,3 +52,9 @@ for (i in range_en_savings) {
 	cat(i, " ", range_costs[j], " ~", range_availability[j], "\n")
 	j<-j+1
 }
+
+library(rgl)
+plot3d(range_en_savings, range_costs, range_availability, col="red", size=3)
+
+Sys.sleep(10)
+
