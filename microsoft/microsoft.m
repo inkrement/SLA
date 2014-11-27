@@ -1,5 +1,5 @@
-pings = importdata('Pings.txt');
-%pings = importdata('PingData00.txt');
+%pings = importdata('Pings.txt');
+pings = importdata('PingData00.txt');
 
 pings = mean(pings);
 
@@ -11,6 +11,19 @@ for day = 1:35
 end
 
 out = grpstats(pings, days, @mean)
-bar(out)
+
+weekDays = [];
+% 1 .. 35 days
+for (weekDay = 1:length(pings)/24)
+    weekDays = horzcat(weekDays, mod(weekDay, 7));
+end
+% per weekday
+weekDaysOut = grpstats(out, weekDays, @mean)
+bar(weekDaysOut)
 ylabel('availability');
 xlabel('days');
+
+% per day
+%bar(out)
+%ylabel('availability');
+%xlabel('days');
