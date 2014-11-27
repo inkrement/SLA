@@ -40,7 +40,7 @@ for(location in locations) {
 }
 
 # calculate different availability values 
-range_en_savings<-seq(0, 0.7, by=0.01)
+range_en_savings<-seq(0, 0.7, by=0.001)
 range_costs<-vector(length=length(range_en_savings))
 range_availability<-vector(length=length(range_en_savings))
 
@@ -54,7 +54,14 @@ for (i in range_en_savings) {
 }
 
 library(rgl)
-plot3d(range_en_savings, range_costs, range_availability, col="red", size=3)
+#plot3d(range_en_savings, range_costs, range_availability, col="red", size=3)
+#Sys.sleep(10)
 
-Sys.sleep(10)
+
+sla_availabilities = list(0.931, 0.966, 0.981, 0.987, 0.992, 0.998)
+for (sla in sla_availabilities) {
+    i <- match(FALSE, range_availability>sla)-1
+    cat("sla: ", sla, " (actual: ", range_availability[i], "), cost: ", range_costs[i], ", savings: ", range_en_savings[i], "\n")
+}
+
 
