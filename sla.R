@@ -53,7 +53,7 @@ for (i in range_en_savings) {
 	j<-j+1
 }
 
-library(rgl)
+#library(rgl)
 #plot3d(range_en_savings, range_costs, range_availability, col="red", size=3)
 #Sys.sleep(10)
 
@@ -64,4 +64,49 @@ for (sla in sla_availabilities) {
     cat("sla: ", sla, " (actual: ", range_availability[i], "), cost: ", range_costs[i], ", savings: ", range_en_savings[i], "\n")
 }
 
+
+
+#######
+# 
+# Aufgabe 3
+#
+#######
+
+# prospect based satisfaction function 
+
+##
+# norm function 
+##
+normalize_availabilities <- function(availabilities){
+  return ((availabilities - min(availabilities) ) / (max(availabilities) - min(availabilities)) )
+}
+
+##
+# prospect based satisfaction function
+##
+pbsf <- function(n, w=0.5) {
+  #assert 0 <= n <= 1
+  stopifnot(n >= 0)
+  stopifnot(n <= 1)
+  
+  if (n <= 0.5){
+    return(-0.5*(-2*n + 1) ^ (1-w) + 0.5)
+  } 
+  
+  return(0.5*(2 * n - 1) ^ (1-w) + 0.5)
+}
+
+##
+# test for skype
+#
+# min av. 86.5 (calculated in the last exercise)
+# w=0.5 (professional users)
+# n=normalized availabilities
+##
+min_avail_skype <- 0.865
+max_amazon_aval <- 0.998
+
+aval_skype <- seq(min_avail_skype, max_amazon_aval, 0.001)
+user_scores <- lapply(normalize_availabilities(aval_skype), pbsf);
+plot(aval_skype, user_scores)
 
