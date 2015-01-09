@@ -97,6 +97,13 @@ pbsf <- function(n, w=0.5) {
 }
 
 ##
+# payment willingness
+##
+wtp <- function(avail, price) {
+	return(avail * price + jitter(0, 0.025))
+}
+
+##
 # test for skype
 #
 # min av. 86.5 (calculated in the last exercise)
@@ -109,6 +116,9 @@ max_amazon_aval <- 0.998
 aval_skype <- seq(min_avail_skype, max_amazon_aval, 0.001)
 user_scores <- lapply(normalize_availabilities(aval_skype), pbsf);
 plot(aval_skype, user_scores)
+
+wtp_skype <- wtp(aval_skype, vm_baseprice)
+cat("Skype WTP:", wtp_skype)
 
 ##
 #  microsoft
@@ -124,3 +134,22 @@ aval_ms <- seq(min_avail_ms, max_amazon_aval, 0.001)
 user_scores_ms <- lapply(normalize_availabilities(aval_ms), pbsf);
 plot(aval_ms, user_scores_ms)
 
+wtp_ms <- wtp(aval_ms, vm_baseprice)
+cat("Microsoft WTP:", wtp_ms)
+
+##
+#  websitess
+#
+# min av. 93.81 (calculated in the last exercise)
+# w=0.5 (professional users)
+# n=normalized availabilities
+##
+min_avail_web <- 0.9381
+max_amazon_aval <- 0.998
+
+aval_web <- seq(min_avail_web, max_amazon_aval, 0.001)
+user_scores_web <- lapply(normalize_availabilities(aval_web), pbsf);
+plot(aval_web, user_scores_web)
+
+wtp_web <- wtp(aval_web, vm_baseprice)
+cat("Websites WTP:", wtp_web)
