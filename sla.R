@@ -110,3 +110,17 @@ aval_skype <- seq(min_avail_skype, max_amazon_aval, 0.001)
 user_scores <- lapply(normalize_availabilities(aval_skype), pbsf);
 plot(aval_skype, user_scores)
 
+##
+#  microsoft
+#
+# min av. 81.24 (calculated in the last exercise)
+# w=0.5 (professional users)
+# n=normalized availabilities
+##
+min_avail_ms <- 0.8124
+max_amazon_aval <- 0.998
+
+aval_ms <- seq(min_avail_ms, max_amazon_aval, 0.001)
+user_scores_ms <- lapply(normalize_availabilities(aval_ms), pbsf);
+plot(aval_ms, user_scores_ms)
+
