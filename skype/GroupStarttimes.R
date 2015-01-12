@@ -1,7 +1,5 @@
-
-#
-# import values
-#
+# This file groups the start times
+# of the skype session logs
 
 values <- scan("start_times_only", what=integer())
 
