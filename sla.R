@@ -104,7 +104,8 @@ pbsf <- function(n, w=0.5) {
   } else {
     sat <- 0.5*(2 * n - 1) ^ (1-w) + 0.5
   }
-  return(max(0, min(sat, 1)))  # clamp to [0,1]
+
+  return(sat)
 }
 
 ##
@@ -149,11 +150,11 @@ wtp_ms <- wtp(aval_ms, vm_baseprice)
 ##
 #  websites
 #
-# min av. 93.81 (calculated in the last exercise)
+# min av. 60.35 (calculated in the last exercise)
 # w=0.5 (professional users)
 # n=normalized availabilities
 ##
-min_avail_web <- 0.9381
+min_avail_web <- 0.6035
 max_amazon_aval <- 0.998
 
 aval_web <- seq(min_avail_web, max_amazon_aval, 0.001)
@@ -163,15 +164,21 @@ wtp_web <- wtp(aval_web, vm_baseprice)
 #cat("Websites WTP:", wtp_web)
 
 
-plot(aval_ms, user_scores_ms, col="blue", type="l", xlab="availability", ylab="user score")
+plot(aval_web, user_scores_web, col="red", type="l", xlab="availability", ylab="user score")
 lines(aval_skype, user_scores_skype, col="orange")
-lines(aval_web, user_scores_web, col="red")
+lines(aval_ms, user_scores_ms, col="blue")
 
 legend(x=locator(n=1), legend=c("ms", "skype", "web"), fill=c("blue", "orange", "red"))
-locator(n=1)
+#locator(n=1)
 
 plot(aval_web, wtp_web)
 #locator(n=1)
+
+#######
+#
+# Aufgabe 4
+#
+#######
 
 # alternative utility function
 alpha = 60;
@@ -182,17 +189,16 @@ fi <- function(reqav, av) {
   return(gamma/(gamma+beta*exp(reqav^2*alpha*(reqav-av))))
 }
 
+# calculate utility for given availability requirements (reqavt) wrt. an SLA availability (avt)
 utility_model <- function(wtp, reqavt, avt) {
-  return(wtp*(unlist(lapply(reqavt, function(ra) { pbsf(normalize_availability(avt, ra, max_amazon_aval)) }))/0.5) - unlist(lapply(avt, function (x) { costs(ensavings(x)) })))
-  #return(unlist(mapply(function(wp, reqav) { wp*fi(reqav, avt)-costs(ensavings(avt)) }, wtp, reqavt)))
+  # prospect-based utility model
+  #return(wtp*(unlist(lapply(reqavt, function(ra) { pbsf(normalize_availability(avt, ra, max_amazon_aval)) }))/0.5) - vm_baseprice)
+
+  # utility function
+  return(unlist(mapply(function(wp, reqav) { wp*fi(reqav, avt)-costs(ensavings(avt)) }, wtp, reqavt)))
 }
 
-#hist(utility_model(wtp_skype, aval_skype), xlab="price", ylab="#users", main="", breaks=10)
-#hist(utility_model(wtp_skype, aval_skype), xlab="price", title="", add=TRUE, density=10, breaks=10)
-#hist(utility_model(wtp_ms, aval_ms), xlab="price", title="", add=TRUE, density=10, angle=-45, breaks=10)
-#locator(n=1)
-
-#FIXME: should import this from proc.R
+# availability requirements of all users (websites, desktops, skype)
 availdata <- c(0.96685080256856, 0.992825395521464, 0.988075729359699, 
   0.988783069297131, 0.992974908042774, 0.922675096162584, 0.973994960186689, 
   0.9585829637388, 0.992669445712149, 0.988393682359168, 0.989098228980047, 
@@ -228,7 +234,10 @@ availdata <- c(0.96685080256856, 0.992825395521464, 0.988075729359699,
   0.5236998746532)
 
 
-maxclusters <- 15
+# draw the distribution of WTP values
+hist(unlist(lapply(availdata, wtp, baseprice=vm_baseprice)), xlab="WTP ($/h)", ylab="#users", main="")
+
+maxclusters <- 20
 minconfidence = 0.95
 
 # matrix with 2 columns (avail and WTP)
@@ -240,8 +249,12 @@ slausers <- matrix(nrow=maxclusters, ncol=maxclusters,
                      lapply(1:maxclusters, function(x) { paste0(x, "SLAs") })
                    ))
 
+confidence = vector(length=maxclusters)
+
+# try a range of cluster numbers
 for (numclusters in seq(2, maxclusters, by=1)) {
 
+  # build the clusters
   clusters <- kmeans(mat, numclusters)
   clmembers <- clusters[["cluster"]]
   centers <- clusters[["centers"]]
@@ -251,6 +264,7 @@ for (numclusters in seq(2, maxclusters, by=1)) {
   numcustomers <- matrix(nrow=numclusters, ncol=2)
   colnames(numcustomers) <- c("total", "positive_util")
 
+  # calculate the maximum values and number of positive-utility members per cluster
   for (i in seq(1, numclusters, by=1)) {
     avails <- availdata[clmembers == i]
     clustermax[i] <- max(avails)
@@ -260,8 +274,9 @@ for (numclusters in seq(2, maxclusters, by=1)) {
     numcustomers[i,"positive_util"] <- length(ut[ut >= 0])
   }
 
-  plot(mat, xlab="availability", ylab="WTP", pch=c(4, 19)[satisfied+1], col=clmembers)
-  #locator(n=1)
+  if(numclusters == 10) {
+    plot(mat, xlab="availability", ylab="WTP ($/h)", pch=c(4, 19)[satisfied+1], col=clmembers)
+  }
 
   # result of clustering is unordered -> order by increasing SLA availability
   ordering <- order(clustermax)
@@ -272,16 +287,15 @@ for (numclusters in seq(2, maxclusters, by=1)) {
 
   slausers[,numclusters] <- c(numcustomers[,"positive_util"], rep.int(0, maxclusters-numclusters))
 
-  confidence <- sum(numcustomers[,"positive_util"])/sum(numcustomers[,"total"])
-  if (confidence < minconfidence) {
-    cat("not enough confidence, have", confidence, "\n")
-  } else {
-    cat("confidence:", confidence, "\n")
-  }
+  # calculate share of satisfied users
+  confidence[numclusters] <- sum(numcustomers[,"positive_util"])/sum(numcustomers[,"total"])
 
   cat(clustermax, "\n", numcustomers, "\n")
 }
 
+firstmatch <- match(TRUE, confidence>0.95)[1]
+cat('first SLA with confidence > 95%: SLA', firstmatch, "\n")
+
 barplot(slausers, ylab="#users")
 
-#barplot(slausers[,dim(slausers)[[2]]], ylab="#users", main="sla selection")
+barplot(slausers[1:firstmatch,firstmatch], ylab="#users", main="sla selection")
