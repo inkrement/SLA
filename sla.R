@@ -237,35 +237,36 @@ availdata <- c(0.96685080256856, 0.992825395521464, 0.988075729359699,
 # draw the distribution of WTP values
 hist(unlist(lapply(availdata, wtp, baseprice=vm_baseprice)), xlab="WTP ($/h)", ylab="#users", main="")
 
-maxclusters <- 20
-minconfidence = 0.95
+maxslas <- 20       # maximum number of SLAs to try
+minconvrate <- 0.95 # minimum required conversion rate
 
 # matrix with 2 columns (avail and WTP)
 mat <- matrix(c(availdata, lapply(availdata, wtp, baseprice=vm_baseprice)), ncol=2)
 
-slausers <- matrix(nrow=maxclusters, ncol=maxclusters,
+slausers <- matrix(nrow=maxslas, ncol=maxslas,
                    dimnames=list(
-                     lapply(1:maxclusters, function(x) { paste0("sla", x) }),
-                     lapply(1:maxclusters, function(x) { paste0(x, "SLAs") })
+                     lapply(1:maxslas, function(x) { paste0("sla", x) }),
+                     lapply(1:maxslas, function(x) { paste0(x, "SLAs") })
                    ))
 
-confidence = vector(length=maxclusters)
+# conversion rate
+convrate = vector(length=maxslas)
 
-# try a range of cluster numbers
-for (numclusters in seq(2, maxclusters, by=1)) {
+# try a range of SLA numbers
+for (numslas in seq(1, maxslas, by=1)) {
 
   # build the clusters
-  clusters <- kmeans(mat, numclusters)
+  clusters <- kmeans(mat, numslas)
   clmembers <- clusters[["cluster"]]
   centers <- clusters[["centers"]]
   satisfied <- vector(length=length(availdata))
 
-  clustermax <- vector(length=numclusters)              # maximum value of each cluster
-  numcustomers <- matrix(nrow=numclusters, ncol=2)
+  clustermax <- vector(length=numslas)              # maximum value of each cluster
+  numcustomers <- matrix(nrow=numslas, ncol=2)
   colnames(numcustomers) <- c("total", "positive_util")
 
   # calculate the maximum values and number of positive-utility members per cluster
-  for (i in seq(1, numclusters, by=1)) {
+  for (i in seq(1, numslas, by=1)) {
     avails <- availdata[clmembers == i]
     clustermax[i] <- max(avails)
     ut <- utility_model(wtp(avails, vm_baseprice), avails, clustermax[i])
@@ -274,44 +275,46 @@ for (numclusters in seq(2, maxclusters, by=1)) {
     numcustomers[i,"positive_util"] <- length(ut[ut >= 0])
   }
 
-  if(numclusters == 10) {
-    plot(mat, xlab="availability", ylab="WTP ($/h)", pch=c(4, 19)[satisfied+1], col=clmembers)
+  # plot clusters
+  plot(mat, xlab="availability", ylab="WTP ($/h)", pch=c(4, 19)[satisfied+1], col=clmembers)
+
+  if(numslas > 1) {
+    # result of clustering is unordered -> order by increasing SLA availability
+    ordering <- order(clustermax)
+    clustermax <- clustermax[ordering]
+    numcustomers <- numcustomers[ordering, ]
+
+    row.names(numcustomers) <- lapply(1:numslas, function(x) { paste0("sla", x, "\n(", round(clustermax[x], digits=3), "%)") })
   }
 
-  # result of clustering is unordered -> order by increasing SLA availability
-  ordering <- order(clustermax)
-  clustermax <- clustermax[ordering]
-  numcustomers <- numcustomers[ordering, ]
-
-  row.names(numcustomers) <- lapply(1:numclusters, function(x) { paste0("sla", x, "\n(", round(clustermax[x], digits=3), "%)") })
-
-  slausers[,numclusters] <- c(numcustomers[,"positive_util"], rep.int(0, maxclusters-numclusters))
+  slausers[,numslas] <- c(numcustomers[,"positive_util"], rep.int(0, maxslas-numslas))
 
   # calculate share of satisfied users
-  confidence[numclusters] <- sum(numcustomers[,"positive_util"])/sum(numcustomers[,"total"])
+  convrate[numslas] <- sum(numcustomers[,"positive_util"])/sum(numcustomers[,"total"])
 
   cat(clustermax, "\n", numcustomers, "\n")
 }
 
-numslas <- match(TRUE, confidence>0.95)[1]
-cat('first SLA with confidence > 95%: SLA', numslas, "\n")
+# optimum number of SLAs: first which exceeds 95% conversion
+optslas <- match(TRUE, convrate>0.95)[1]
+cat('first SLA with conversion > 95%: SLA', optslas, "\n")
 
 barplot(slausers, ylab="#users")
 
-barplot(slausers[1:numslas,numslas], ylab="#users", main="sla selection")
+barplot(slausers[1:optslas,optslas], ylab="#users", main="sla selection")
 
-percsavings <- vector(length=numslas)
+percsavings <- vector(length=optslas)
 totalsavings <- 0
 totalusercount <- 0
-for(i in seq(1, numslas)) {
+for(i in seq(1, optslas)) {
   saved <- vm_baseprice-(costs(ensavings(clustermax[i])))
-  totalusercount <- totalusercount + slausers[i,numslas]
-  totalsavings <- totalsavings + saved*slausers[i,numslas]
+  totalusercount <- totalusercount + slausers[i,optslas]
+  totalsavings <- totalsavings + saved*slausers[i,optslas]
   percsavings[i] <- (saved / vm_baseprice)
-  
+
   cat('savings SLA', i, ', av ',clustermax[i] ,', : ', percsavings[i], '%', '\n')
 }
 
-barplot(percsavings, ylab="% savings")
+barplot(percsavings, xlab="SLAs", ylab="% savings")
 
 cat('total saved: ', totalsavings/(totalusercount*vm_baseprice)*100, '%\n')
