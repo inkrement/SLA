@@ -249,6 +249,12 @@ slausers <- matrix(nrow=maxslas, ncol=maxslas,
                      lapply(1:maxslas, function(x) { paste0(x, "SLAs") })
                    ))
 
+slas <- matrix(-1, nrow=maxslas, ncol=maxslas,
+               dimnames=list(
+                 lapply(1:maxslas, function(x) { paste0("sla", x) }),
+                 lapply(1:maxslas, function(x) { paste0(x, "SLAs") })
+               ))
+
 # conversion rate
 convrate = vector(length=maxslas)
 
@@ -288,6 +294,7 @@ for (numslas in seq(1, maxslas, by=1)) {
   }
 
   slausers[,numslas] <- c(numcustomers[,"positive_util"], rep.int(0, maxslas-numslas))
+  slas[1:numslas,numslas] <- clustermax
 
   # calculate share of satisfied users
   convrate[numslas] <- sum(numcustomers[,"positive_util"])/sum(numcustomers[,"total"])
@@ -298,23 +305,26 @@ for (numslas in seq(1, maxslas, by=1)) {
 # optimum number of SLAs: first which exceeds 95% conversion
 optslas <- match(TRUE, convrate>0.95)[1]
 cat('first SLA with conversion > 95%: SLA', optslas, "\n")
+bestsla <- slas[1:optslas, optslas]
 
 barplot(slausers, ylab="#users")
 
-barplot(slausers[1:optslas,optslas], ylab="#users", main="sla selection")
+barplot(slausers[1:optslas,optslas], ylab="#users", main="SLA selection")
 
 percsavings <- vector(length=optslas)
 totalsavings <- 0
 totalusercount <- 0
 for(i in seq(1, optslas)) {
-  saved <- vm_baseprice-(costs(ensavings(clustermax[i])))
+  saved <- vm_baseprice-(costs(ensavings(bestsla[i])))
   totalusercount <- totalusercount + slausers[i,optslas]
   totalsavings <- totalsavings + saved*slausers[i,optslas]
   percsavings[i] <- (saved / vm_baseprice)
 
-  cat('savings SLA', i, ', av ',clustermax[i] ,', : ', percsavings[i], '%', '\n')
+  cat('SLA', i, ', av', bestsla[i]*100 ,'%, savings:', percsavings[i]*100, '%', '\n')
 }
 
-barplot(percsavings, xlab="SLAs", ylab="% savings")
+names(percsavings) <- lapply(1:optslas, function(x) { paste0("sla", x, "\n(", round(bestsla[x], digits=3), "%)") })
 
-cat('total saved: ', totalsavings/(totalusercount*vm_baseprice)*100, '%\n')
+barplot(percsavings*100, xlab="SLAs", ylab="% savings")
+
+cat('total saved:', totalsavings/(totalusercount*vm_baseprice)*100, '%\n')
