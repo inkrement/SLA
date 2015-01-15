@@ -293,9 +293,25 @@ for (numclusters in seq(2, maxclusters, by=1)) {
   cat(clustermax, "\n", numcustomers, "\n")
 }
 
-firstmatch <- match(TRUE, confidence>0.95)[1]
-cat('first SLA with confidence > 95%: SLA', firstmatch, "\n")
+numslas <- match(TRUE, confidence>0.95)[1]
+cat('first SLA with confidence > 95%: SLA', numslas, "\n")
 
 barplot(slausers, ylab="#users")
 
-barplot(slausers[1:firstmatch,firstmatch], ylab="#users", main="sla selection")
+barplot(slausers[1:numslas,numslas], ylab="#users", main="sla selection")
+
+percsavings <- vector(length=numslas)
+totalsavings <- 0
+totalusercount <- 0
+for(i in seq(1, numslas)) {
+  saved <- vm_baseprice-(costs(ensavings(clustermax[i])))
+  totalusercount <- totalusercount + slausers[i,numslas]
+  totalsavings <- totalsavings + saved*slausers[i,numslas]
+  percsavings[i] <- (saved / vm_baseprice)
+  
+  cat('savings SLA', i, ', av ',clustermax[i] ,', : ', percsavings[i], '%', '\n')
+}
+
+barplot(percsavings, ylab="% savings")
+
+cat('total saved: ', totalsavings/(totalusercount*vm_baseprice)*100, '%\n')
